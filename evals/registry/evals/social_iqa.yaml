@@ -1,0 +1,8 @@
+social_iqa:
+  id: social_iqa.test.v1
+  metrics:
+  - accuracy
+social_iqa.test.v1:
+  args:
+    samples_jsonl: /home/lorenzo/Dropbox/RECOG-AI/code/evals/examples/../evals/registry/data/social_iqa/samples.jsonl
+  class: evals.elsuite.basic.match:Match
