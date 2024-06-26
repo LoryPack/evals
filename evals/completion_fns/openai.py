@@ -34,6 +34,34 @@ class OpenAIChatCompletionResult(OpenAIBaseCompletionResult):
                     completions.append(choice["message"]["content"])
         return completions
 
+    def get_logprobs(self) -> list[list[dict]]:
+        logprobs = []
+        if self.raw_data and "choices" in self.raw_data:
+            for choice in self.raw_data["choices"]:
+                if (
+                    "logprobs" in choice
+                    and isinstance(choice["logprobs"], dict)
+                    and "content" in choice["logprobs"]
+                ):
+                    to_add = [
+                        {k: v for k, v in zip(elem.keys(), elem.values())}
+                        for elem in choice["logprobs"]["content"]
+                    ]
+                    for elem in to_add:
+                        # discard the "bytes" field from each element of the dictionary
+                        elem.pop("bytes", None)
+                        # make sure top_logprobs is saved correctly
+                        elem["top_logprobs"] = [
+                            {k: v for k, v in zip(elem2.keys(), elem2.values())}
+                            for elem2 in elem["top_logprobs"]
+                        ]
+                        for elem2 in elem["top_logprobs"]:
+                            if "bytes" in elem2:
+                                elem2.pop("bytes", None)
+                    logprobs.append(to_add)
+
+        return logprobs
+
 
 class OpenAICompletionResult(OpenAIBaseCompletionResult):
     def get_completions(self) -> list[str]:
@@ -134,5 +162,7 @@ class OpenAIChatCompletionFn(CompletionFnSpec):
             **{**kwargs, **self.extra_options},
         )
         result = OpenAIChatCompletionResult(raw_data=result, prompt=openai_create_prompt)
-        record_sampling(prompt=result.prompt, sampled=result.get_completions())
+        record_sampling(
+            prompt=result.prompt, sampled=result.get_completions(), logprobs=result.get_logprobs()
+        )
         return result

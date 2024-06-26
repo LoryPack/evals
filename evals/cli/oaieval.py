@@ -141,6 +141,11 @@ def run(args: OaiEvalArguments, registry: Optional[Registry] = None) -> str:
     # if the user provides temperature, transform that into a number:
     if "temperature" in additonal_completion_args:
         additonal_completion_args["temperature"] = float(additonal_completion_args["temperature"])
+    if "top_logprobs" in additonal_completion_args:
+        additonal_completion_args["top_logprobs"] = int(additonal_completion_args["top_logprobs"])
+    if "logprobs" in additonal_completion_args:
+        # this will be either True or False
+        additonal_completion_args["logprobs"] = additonal_completion_args["logprobs"] == "True"
 
     completion_fns = args.completion_fn.split(",")
     completion_fn_instances = [
